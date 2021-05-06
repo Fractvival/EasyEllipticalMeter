@@ -73,7 +73,7 @@ void TheApproxSecond()
   totalPD   = "PD: ";
   totalKCAL += String((BCPM/(float)60)*(float)deltaTotalTime).toFloat();
   totalKJ += String((((BCPM/(float)60)*((float)deltaTotalTime/(float)1000)*(float)4184))).toFloat();
-  totalPD += String(deltaPD/(float)FULLSENSORTICKS).toFloat();
+  totalPD += String((deltaPD/FULLSENSORTICKS));
   helpHour = String(hour(deltaTotalTime),DEC);
   helpMin = String(minute(deltaTotalTime),DEC);
   helpSec = String(second(deltaTotalTime),DEC);
@@ -113,7 +113,9 @@ void SensorTime()
       }
     deltaSensor++;
     if (isMove)
-      deltaPD += (float)deltaSensor;
+    {
+      deltaPD++;
+    }
   }
 }
 
