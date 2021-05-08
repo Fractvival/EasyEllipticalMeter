@@ -3,13 +3,15 @@
 //-- Knihovna U8G2 od Olikraus
 //-- https://github.com/olikraus/u8g2/wiki
 #include <U8g2lib.h>
-#include <U8x8lib.h>
 
 //-- Konstrukce displeje SSD1306, FULL BUFFER(1024b) SW, I2C, bez reset pinu
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, SCL, SDA, U8X8_PIN_NONE);
 
 //-- DEFINICE URCENE K NASTAVENI PROGRAMU
 
+//-- Zde definujeme jakou jednotku chceme zobrazit
+//#define UNIT KCAL
+#define UNIT KJOULE
 //-- Zde se nastavi pocet tiku (sepnuti senzoru magnetem) pro jednu celou otocku jednoho pedalu
 //-- Tedy otocka treba leveho pedalu o 360 stupnu
 #define FULLSENSORTICKS 8.0
@@ -33,11 +35,12 @@ unsigned long nowTime = 0;
 unsigned long deltaTime = 0;
 unsigned long deltaTotalTime = 0;
 unsigned long deltaSensor = 0;
-float deltaPD = 0;
 String totalTime;
-String totalKCAL;
+#ifdef UNIT==KJOULE
 String totalKJ;
-String totalPD;
+#else
+String totalKCAL;
+#endif
 String helpHour;
 String helpMin;
 String helpSec;
@@ -68,12 +71,13 @@ void TheApproxSecond()
     deltaTotalTime++;
   }
   totalTime = "";
-  totalKCAL = "CA: ";
-  totalKJ   = "kJ: ";
-  totalPD   = "PD: ";
-  totalKCAL += String((BCPM/(float)60)*(float)deltaTotalTime).toFloat();
-  totalKJ += String((((BCPM/(float)60)*((float)deltaTotalTime/(float)1000)*(float)4184))).toFloat();
-  totalPD += String((deltaPD/FULLSENSORTICKS));
+#ifdef UNIT==KJOULE
+  totalKJ   = "";
+  totalKJ += String((((BCPM/(float)60)*((float)deltaTotalTime/(float)1000)*(float)4184))).toInt();
+#else
+  totalKCAL = "";
+  totalKCAL += String((BCPM/(float)60)*(float)deltaTotalTime).toInt();
+#endif
   helpHour = String(hour(deltaTotalTime),DEC);
   helpMin = String(minute(deltaTotalTime),DEC);
   helpSec = String(second(deltaTotalTime),DEC);
@@ -89,14 +93,14 @@ void TheApproxSecond()
     totalTime += "0";
   totalTime += helpSec;
   u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_logisoso16_tn);
+  u8g2.setFont(u8g2_font_logisoso22_tn);
   u8g2.setFontPosTop();
-  u8g2.drawStr(28,0,totalTime.c_str());
-  u8g2.setFont(u8g2_font_pxplusibmvga9_mr);
-  u8g2.setFontPosTop();
-  u8g2.drawStr(15,22,totalKCAL.c_str());
-  u8g2.drawStr(15,37,totalKJ.c_str());
-  u8g2.drawStr(15,52,totalPD.c_str());
+  u8g2.drawStr( (u8g2.getDisplayWidth()/2)-(u8g2.getStrWidth(totalTime.c_str())/2),0,totalTime.c_str());
+#ifdef UNIT==KJOULE
+  u8g2.drawStr(((u8g2.getDisplayWidth()/2)-(u8g2.getStrWidth(totalKJ.c_str())/2)),36,totalKJ.c_str());
+#else
+  u8g2.drawStr(((u8g2.getDisplayWidth()/2)-(u8g2.getStrWidth(totalKCAL.c_str())/2)),36,totalKCAL.c_str());
+#endif
   u8g2.sendBuffer();
 }
 
@@ -112,10 +116,6 @@ void SensorTime()
     {
       }
     deltaSensor++;
-    if (isMove)
-    {
-      deltaPD++;
-    }
   }
 }
 
